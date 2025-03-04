@@ -1,0 +1,23 @@
+1. Search Criteria
+     Users should have the ability to search using multiple criteria, including size, block number, price, and status. This ensures greater flexibility and control over their search, allowing them to find relevant results more efficiently.
+
+2. Input Methods for Search Criteria
+     To enter their search criteria, a combination of input methods is recommended:
+
+     Dropdowns – Suitable for fields with a limited number of options, such as status.
+     Text Input Fields – Ideal for numerical ranges, such as size and price, with dedicated "min" and "max" inputs for precise range searches.
+     Sliders (Optional) – Can be included for price ranges but should display numerical values for accuracy.
+
+3. Displaying Search Results
+     A table format is the most effective choice for presenting search results. It allows for clear organisation of data in columns, making it easier for users to compare different lots.
+
+4. Sorting Options
+     Sorting is essential to enhance user experience.
+
+     By default, results should be sorted by price (lowest to highest).
+     Users should also have the option to sort by size, block number, and status.
+
+     Sortable column headers should be implemented for ease of use.
+5. Additional Features
+     "Show All" Button – A "Show All" button should be included to display all available lots without filters applied. This enhances convenience for users who want to browse the full selection.
+     "Reset" Button – A "Reset" button is highly recommended to clear all applied filters at once, allowing users to start a new search without manually adjusting each criterion.
