@@ -14,4 +14,9 @@ public class PoolDecorator extends LotDecorator {
     public double getPrice() {
         return decoratedLot.getPrice() + POOL_PRICE;
     }
+
+    @Override
+    public String getStatus() {
+        return decoratedLot.getStatus(); // Pass through the status
+    }
 }

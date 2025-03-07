@@ -1,266 +1,135 @@
 import java.awt.*;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 
 public class RealEstateFrame extends JFrame {
+    private List<LotComponent> lots = new ArrayList<>();
     private JTextArea displayArea;
-    private LotManager lotManager;
-
+    private JPanel controlPanel;
+    
     public RealEstateFrame() {
-        setTitle("Real Estate Management System");
-        lotManager = new LotManager();
-        displayArea = new JTextArea();
-        displayArea.setEditable(false);
-        displayArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        super("Real Estate Management System");
         setLayout(new BorderLayout());
-        add(new JScrollPane(displayArea), BorderLayout.CENTER);
-
-        // Create tabbed panel for different control groups
-        JTabbedPane tabbedPane = new JTabbedPane();
         
-        // Main control panel
-        JPanel controlPanel = new JPanel();
-        controlPanel.setLayout(new GridLayout(6, 2, 5, 5));
-        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Initialize the display area
+        displayArea = new JTextArea(20, 50);
+        displayArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(displayArea);
+        add(scrollPane, BorderLayout.CENTER);
         
-        // Search panel
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new GridLayout(6, 2, 5, 5));
-        searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Welcome message
-        displayArea.setText("""
-                           Welcome to Real Estate Management System
-                           
-                           Use the controls below to manage properties:
-                           - Add Lot: Create a new property listing
-                           - Search Lot: Find a property by ID
-                           - Sell Lot: Mark a property as sold
-                           - Reserve Lot: Place a hold on a property
-                           - Generate Report: View all property listings
-                           - Search by Block/Size/Price: Find lots by specific criteria
-                           """);
-
-        addControl(controlPanel, "Add Lot:", e -> {
-            JPanel inputPanel = new JPanel(new GridLayout(4, 2, 5, 5));
-            JTextField blockField = new JTextField();
-            JTextField lotNumberField = new JTextField();
-            JTextField sizeField = new JTextField();
-            JTextField priceField = new JTextField();
-            
-            inputPanel.add(new JLabel("Block Number (1-5):"));
-            inputPanel.add(blockField);
-            inputPanel.add(new JLabel("Lot Number (1-20):"));
-            inputPanel.add(lotNumberField);
-            inputPanel.add(new JLabel("Size (sqm):"));
-            inputPanel.add(sizeField);
-            inputPanel.add(new JLabel("Price ($):"));
-            inputPanel.add(priceField);
-            
-            int result = JOptionPane.showConfirmDialog(this, inputPanel, 
-                    "Enter Lot Details", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                try {
-                    String lotDetails = blockField.getText() + "," + 
-                                        lotNumberField.getText() + "," + 
-                                        sizeField.getText() + "," + 
-                                        priceField.getText();
-                    displayArea.setText(lotManager.addLot(lotDetails));
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, 
-                            "Please enter valid numbers for all fields", 
-                            "Input Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        addControl(controlPanel, "Search Lot:", e -> {
-            String lotId = getInput("Enter lot ID (e.g., Lot1):", "Search Lot");
-            if (lotId != null && !lotId.isEmpty()) {
-                displayArea.setText(lotManager.searchLot(lotId));
-            }
-        });
-
-        addControl(controlPanel, "Sell Lot:", e -> {
-            String lotId = getInput("Enter lot ID to mark as sold (e.g., Lot1):", "Sell Lot");
-            if (lotId != null && !lotId.isEmpty()) {
-                displayArea.setText(lotManager.sellLot(lotId));
-            }
-        });
-
-        addControl(controlPanel, "Reserve Lot:", e -> {
-            String lotId = getInput("Enter lot ID to reserve (e.g., Lot1):", "Reserve Lot");
-            if (lotId != null && !lotId.isEmpty()) {
-                displayArea.setText(lotManager.reserveLot(lotId));
-            }
-        });
-
-        JLabel reportLabel = new JLabel("View all properties:");
-        JButton reportButton = new JButton("Generate Report");
-        reportButton.addActionListener(e -> displayArea.setText(lotManager.generateReport()));
-        controlPanel.add(reportLabel);
-        controlPanel.add(reportButton);
+        // Create control panel
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new GridLayout(0, 1, 5, 5));
         
-        JLabel clearLabel = new JLabel("Clear display:");
-        JButton clearButton = new JButton("Clear");
-        clearButton.addActionListener(e -> displayArea.setText(""));
-        controlPanel.add(clearLabel);
-        controlPanel.add(clearButton);
+        // Add lot button
+        JButton addLotButton = new JButton("Add New Lot");
+        addLotButton.addActionListener(e -> addNewLot());
         
-        // Search by block
-        addControl(searchPanel, "Search by Block:", e -> {
-            String blockStr = getInput("Enter block number (1-5):", "Search by Block");
-            if (blockStr != null && !blockStr.isEmpty()) {
-                try {
-                    int block = Integer.parseInt(blockStr);
-                    displayArea.setText(lotManager.searchLotsByBlock(block));
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, 
-                            "Please enter a valid block number", 
-                            "Input Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        // View lots button
+        JButton viewLotsButton = new JButton("View All Lots");
+        viewLotsButton.addActionListener(e -> displayLots());
         
-        // Search by size
-        addControl(searchPanel, "Search by Size:", e -> {
-            JPanel sizePanel = new JPanel(new GridLayout(2, 2, 5, 5));
-            JTextField minSizeField = new JTextField("0");
-            JTextField maxSizeField = new JTextField("1000");
-            
-            sizePanel.add(new JLabel("Minimum Size (sqm):"));
-            sizePanel.add(minSizeField);
-            sizePanel.add(new JLabel("Maximum Size (sqm):"));
-            sizePanel.add(maxSizeField);
-            
-            int result = JOptionPane.showConfirmDialog(this, sizePanel, 
-                    "Enter Size Range", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                try {
-                    double minSize = Double.parseDouble(minSizeField.getText());
-                    double maxSize = Double.parseDouble(maxSizeField.getText());
-                    displayArea.setText(lotManager.searchLotsBySize(minSize, maxSize));
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, 
-                            "Please enter valid numbers", 
-                            "Input Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        // Add decorations button
+        JButton addDecorationsButton = new JButton("Add Decorations to Lot");
+        addDecorationsButton.addActionListener(e -> addDecorations());
         
-        // Search by price
-        addControl(searchPanel, "Search by Price:", e -> {
-            JPanel pricePanel = new JPanel(new GridLayout(2, 2, 5, 5));
-            JTextField minPriceField = new JTextField("0");
-            JTextField maxPriceField = new JTextField("1000000");
-            
-            pricePanel.add(new JLabel("Minimum Price ($):"));
-            pricePanel.add(minPriceField);
-            pricePanel.add(new JLabel("Maximum Price ($):"));
-            pricePanel.add(maxPriceField);
-            
-            int result = JOptionPane.showConfirmDialog(this, pricePanel, 
-                    "Enter Price Range", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                try {
-                    double minPrice = Double.parseDouble(minPriceField.getText());
-                    double maxPrice = Double.parseDouble(maxPriceField.getText());
-                    displayArea.setText(lotManager.searchLotsByPrice(minPrice, maxPrice));
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, 
-                            "Please enter valid numbers", 
-                            "Input Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        controlPanel.add(addLotButton);
+        controlPanel.add(viewLotsButton);
+        controlPanel.add(addDecorationsButton);
         
-        // Add more search options to fill the search panel
-        JLabel placeholder1 = new JLabel("");
-        JLabel placeholder2 = new JLabel("");
-        JLabel placeholder3 = new JLabel("");
-        JLabel placeholder4 = new JLabel("");
-        JLabel placeholder5 = new JLabel("");
-        JLabel placeholder6 = new JLabel("");
-        searchPanel.add(placeholder1);
-        searchPanel.add(placeholder2);
-        searchPanel.add(placeholder3);
-        searchPanel.add(placeholder4);
-        searchPanel.add(placeholder5);
-        searchPanel.add(placeholder6);
-        
-        // Create a features panel for decorating lots
-        JPanel featuresPanel = new JPanel();
-        featuresPanel.setLayout(new GridLayout(6, 2, 5, 5));
-        featuresPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        // Add features to existing lots
-        addControl(featuresPanel, "Add Pool:", e -> {
-            String lotId = getInput("Enter lot ID to add pool (e.g., Lot101):", "Add Pool Feature");
-            if (lotId != null && !lotId.isEmpty()) {
-                LotComponent decoratedLot = lotManager.addFeatureToLot(lotId, "pool");
-                if (decoratedLot != null) {
-                    displayArea.setText("Pool added to lot:\n" + decoratedLot.getDescription());
-                } else {
-                    displayArea.setText("Lot not found with ID: " + lotId);
-                }
-            }
-        });
-
-        addControl(featuresPanel, "Add Fencing:", e -> {
-            String lotId = getInput("Enter lot ID to add fencing (e.g., Lot101):", "Add Fencing Feature");
-            if (lotId != null && !lotId.isEmpty()) {
-                LotComponent decoratedLot = lotManager.addFeatureToLot(lotId, "fencing");
-                if (decoratedLot != null) {
-                    displayArea.setText("Fencing added to lot:\n" + decoratedLot.getDescription());
-                } else {
-                    displayArea.setText("Lot not found with ID: " + lotId);
-                }
-            }
-        });
-
-        addControl(featuresPanel, "Add Landscaping:", e -> {
-            String lotId = getInput("Enter lot ID to add landscaping (e.g., Lot101):", "Add Landscaping Feature");
-            if (lotId != null && !lotId.isEmpty()) {
-                LotComponent decoratedLot = lotManager.addFeatureToLot(lotId, "landscaping");
-                if (decoratedLot != null) {
-                    displayArea.setText("Landscaping added to lot:\n" + decoratedLot.getDescription());
-                } else {
-                    displayArea.setText("Lot not found with ID: " + lotId);
-                }
-            }
-        });
-        
-        // Add placeholders for layout
-        JLabel placeholder7 = new JLabel("");
-        JLabel placeholder8 = new JLabel("");
-        JLabel placeholder9 = new JLabel("");
-        JLabel placeholder10 = new JLabel("");
-        JLabel placeholder11 = new JLabel("");
-        JLabel placeholder12 = new JLabel("");
-        featuresPanel.add(placeholder7);
-        featuresPanel.add(placeholder8);
-        featuresPanel.add(placeholder9);
-        featuresPanel.add(placeholder10);
-        featuresPanel.add(placeholder11);
-        featuresPanel.add(placeholder12);
-        
-        // Add panels to tabbed pane
-        tabbedPane.addTab("Main Controls", controlPanel);
-        tabbedPane.addTab("Search Options", searchPanel);
-        tabbedPane.addTab("Lot Features", featuresPanel);
-        
-        add(tabbedPane, BorderLayout.SOUTH);
+        add(controlPanel, BorderLayout.WEST);
     }
-
-    private void addControl(JPanel panel, String label, ActionListener actionListener) {
-        JLabel jLabel = new JLabel(label);
-        JButton button = new JButton(label.split(" ")[0]);
-        button.addActionListener(actionListener);
-        panel.add(jLabel);
-        panel.add(button);
+    
+    private void addNewLot() {
+        try {
+            String blockStr = JOptionPane.showInputDialog("Enter Block Number:");
+            String lotStr = JOptionPane.showInputDialog("Enter Lot Number:");
+            String sizeStr = JOptionPane.showInputDialog("Enter Size (sqm):");
+            String priceStr = JOptionPane.showInputDialog("Enter Base Price ($):");
+            
+            int block = Integer.parseInt(blockStr);
+            int lotNumber = Integer.parseInt(lotStr);
+            double size = Double.parseDouble(sizeStr);
+            double price = Double.parseDouble(priceStr);
+            
+            Lot newLot = new Lot(block, lotNumber, size, price);
+            lots.add(newLot);
+            
+            displayArea.setText("New lot added successfully!\n" + newLot.getDescription());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
-
-    private String getInput(String message, String title) {
-        return JOptionPane.showInputDialog(this, message, title, JOptionPane.QUESTION_MESSAGE);
+    
+    private void displayLots() {
+        if (lots.isEmpty()) {
+            displayArea.setText("No lots available.");
+            return;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("Available Lots:\n\n");
+        
+        for (int i = 0; i < lots.size(); i++) {
+            sb.append(i + 1).append(". ").append(lots.get(i).getDescription()).append("\n");
+        }
+        
+        displayArea.setText(sb.toString());
+    }
+    
+    private void addDecorations() {
+        if (lots.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No lots available to decorate", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        String[] lotOptions = new String[lots.size()];
+        for (int i = 0; i < lots.size(); i++) {
+            LotComponent lot = lots.get(i);
+            lotOptions[i] = (i + 1) + ". " + getLotBaseDescription(lot);
+        }
+        
+        String selectedLot = (String) JOptionPane.showInputDialog(
+            this, "Select a lot to decorate:", "Add Decorations",
+            JOptionPane.QUESTION_MESSAGE, null, lotOptions, lotOptions[0]);
+        
+        if (selectedLot == null) return;
+        
+        int index = Integer.parseInt(selectedLot.split("\\.")[0]) - 1;
+        
+        String[] options = {"Landscaping", "Fencing", "Both", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(
+            this, "Select decorations to add:", "Add Decorations",
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+            null, options, options[0]);
+        
+        LotComponent decoratedLot = lots.get(index);
+        
+        switch (choice) {
+            case 0: // Landscaping
+                decoratedLot = new LandscapingDecorator(decoratedLot);
+                break;
+            case 1: // Fencing
+                decoratedLot = new FencingDecorator(decoratedLot);
+                break;
+            case 2: // Both
+                decoratedLot = new LandscapingDecorator(new FencingDecorator(decoratedLot));
+                break;
+            default:
+                return;
+        }
+        
+        lots.set(index, decoratedLot);
+        displayArea.setText("Decorations added successfully!\n" + decoratedLot.getDescription());
+    }
+    
+    private String getLotBaseDescription(LotComponent lot) {
+        // Get the base lot description without decorations
+        if (lot instanceof LotDecorator) {
+            return getLotBaseDescription(((LotDecorator) lot).getDecoratedLot());
+        } else {
+            return ((Lot) lot).getId(); 
+        }
     }
 }

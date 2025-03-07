@@ -14,4 +14,9 @@ public class FencingDecorator extends LotDecorator {
     public double getPrice() {
         return decoratedLot.getPrice() + FENCING_PRICE;
     }
+
+    @Override
+    public String getStatus() {
+        return decoratedLot.getStatus(); // Pass through the status
+    }
 }

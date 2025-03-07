@@ -38,8 +38,8 @@ public class LotManager {
                 return "Price must be positive";
             }
 
-            // Check if the lot already exists
-            String checkId = "Lot" + (block * 100 + lotNumber);
+            // Check if the lot already exists - Fix the ID format
+            String checkId = "Lot" + block + " " + lotNumber;
             if (lots.containsKey(checkId)) {
                 return "Lot already exists with this block and lot number";
             }
@@ -110,8 +110,8 @@ public class LotManager {
                         baseLot.getBlock(), 
                         baseLot.getLotNumber(), 
                         baseLot.getSize(), 
-                        component.getPrice(),  // Use decorated price
-                        component.getDescription().replaceAll(".*Status: ", ""))); // Extract status
+                        component.getPrice(),
+                        component.getStatus())); // Use getStatus directly
             } else {
                 report.append(component.getDescription()).append("\n");
             }
@@ -124,7 +124,8 @@ public class LotManager {
     public String searchLotsByBlock(int block) {
         List<LotComponent> foundLots = new ArrayList<>();
         for (LotComponent lot : lots.values()) {
-            if (lot instanceof Lot && ((Lot) lot).getBlock() == block) {
+            Lot baseLot = findBaseLot(lot);
+            if (baseLot != null && baseLot.getBlock() == block) {
                 foundLots.add(lot);
             }
         }
@@ -135,8 +136,9 @@ public class LotManager {
     public String searchLotsBySize(double minSize, double maxSize) {
         List<LotComponent> foundLots = new ArrayList<>();
         for (LotComponent lot : lots.values()) {
-            if (lot instanceof Lot) {
-                double lotSize = ((Lot) lot).getSize();
+            Lot baseLot = findBaseLot(lot);
+            if (baseLot != null) {
+                double lotSize = baseLot.getSize();
                 if (lotSize >= minSize && lotSize <= maxSize) {
                     foundLots.add(lot);
                 }
@@ -206,5 +208,10 @@ public class LotManager {
             return findBaseLot(decorator.getDecoratedLot());
         }
         return null;
+    }
+
+    private String getStatusFromComponent(LotComponent component) {
+        // Use the getStatus method we've added to all components
+        return component.getStatus();
     }
 }

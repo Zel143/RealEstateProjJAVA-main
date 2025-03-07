@@ -14,4 +14,9 @@ public class LandscapingDecorator extends LotDecorator {
     public double getPrice() {
         return decoratedLot.getPrice() + LANDSCAPING_PRICE;
     }
+
+    @Override
+    public String getStatus() {
+        return decoratedLot.getStatus(); // Pass through the status
+    }
 }

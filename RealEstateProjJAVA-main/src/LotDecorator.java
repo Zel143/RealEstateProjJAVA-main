@@ -15,6 +15,11 @@ public abstract class LotDecorator implements LotComponent {
         return decoratedLot.getPrice();
     }
     
+    @Override
+    public String getStatus() {
+        return decoratedLot.getStatus();
+    }
+
     public LotComponent getDecoratedLot() {
         return decoratedLot;
     }

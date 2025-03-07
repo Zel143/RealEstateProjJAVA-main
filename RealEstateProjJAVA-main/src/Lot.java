@@ -7,13 +7,12 @@ public class Lot implements LotComponent {
     private String status;
 
     public Lot(int block, int lotNumber, double size, double price) {
-        // Change the ID format to include a space between block and lot
-        this.id = "Lot" + block + " " + lotNumber; // Generate ID with space between block and lot
+        this.id = "Lot" + block + " " + lotNumber;
         this.block = block;
         this.lotNumber = lotNumber;
         this.size = size;
         this.price = price;
-        this.status = "Available";
+        this.status = "AVAILABLE"; // Changed to all caps for consistency
     }
 
     // Getters and setters
@@ -54,8 +53,9 @@ public class Lot implements LotComponent {
         this.price = price;
     }
 
+    @Override
     public String getStatus() {
-        return status;
+        return status; // Return the actual status field
     }
 
     public void setStatus(String status) {
@@ -64,7 +64,9 @@ public class Lot implements LotComponent {
 
     @Override
     public String getDescription() {
-        return "ID: " + id + ", Block: " + block + ", Lot: " + lotNumber + ", Size: " + size + " sqm, Price: $" + price + ", Status: " + status;
+        return "Lot " + block + "-" + lotNumber + 
+               " (" + size + " sqm) - $" + price + 
+               " - Status: " + status; // Use the status field
     }
 
     @Override

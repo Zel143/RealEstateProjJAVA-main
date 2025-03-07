@@ -7,15 +7,27 @@ public class ReservedLotDecorator extends LotDecorator {
     @Override
     public String getDescription() {
         // Only change if the lot is not already sold
-        if (decoratedLot.getDescription().contains("Status: SOLD")) {
+        if (decoratedLot.getStatus().equals("SOLD")) {
             return decoratedLot.getDescription();
         }
-        return decoratedLot.getDescription().replace("Status: Available", "Status: Reserved");
+        
+        // Use regex replacement to ensure all status formats are handled
+        return decoratedLot.getDescription()
+                .replaceAll("Status: \\w+", "Status: RESERVED");
     }
     
     @Override
     public double getPrice() {
         // Price remains unchanged when reserved
         return decoratedLot.getPrice();
+    }
+    
+    @Override
+    public String getStatus() {
+        // If the decorated lot is sold, keep it sold
+        if (decoratedLot.getStatus().equals("SOLD")) {
+            return "SOLD";
+        }
+        return "RESERVED";
     }
 }
