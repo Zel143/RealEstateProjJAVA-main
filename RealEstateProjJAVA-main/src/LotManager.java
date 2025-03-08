@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class LotManager {
     private Map<String, LotComponent> lots;
@@ -213,5 +214,56 @@ public class LotManager {
     private String getStatusFromComponent(LotComponent component) {
         // Use the getStatus method we've added to all components
         return component.getStatus();
+    }
+    
+    public List<LotComponent> searchLots(Double minSize, Double maxSize, Double minPrice, Double maxPrice, 
+                                        Integer blockNumber, String status) {
+        List<LotComponent> results = new ArrayList<>(lots.values());
+        
+        // Filter by block if specified
+        if (blockNumber != null) {
+            results = results.stream()
+                .filter(lot -> {
+                    Lot baseLot = findBaseLot(lot);
+                    return baseLot != null && baseLot.getBlock() == blockNumber;
+                })
+                .collect(Collectors.toList());
+        }
+        
+        // Filter by size range if specified
+        if (minSize != null || maxSize != null) {
+            double min = (minSize != null) ? minSize : 0;
+            double max = (maxSize != null) ? maxSize : Double.MAX_VALUE;
+            
+            results = results.stream()
+                .filter(lot -> {
+                    Lot baseLot = findBaseLot(lot);
+                    return baseLot != null && baseLot.getSize() >= min && baseLot.getSize() <= max;
+                })
+                .collect(Collectors.toList());
+        }
+        
+        // Filter by price range if specified
+        if (minPrice != null || maxPrice != null) {
+            double min = (minPrice != null) ? minPrice : 0;
+            double max = (maxPrice != null) ? maxPrice : Double.MAX_VALUE;
+            
+            results = results.stream()
+                .filter(lot -> lot.getPrice() >= min && lot.getPrice() <= max)
+                .collect(Collectors.toList());
+        }
+        
+        // Filter by status if specified
+        if (status != null && !status.isEmpty()) {
+            results = results.stream()
+                .filter(lot -> lot.getStatus().equals(status))
+                .collect(Collectors.toList());
+        }
+        
+        return results;
+    }
+    
+    public List<LotComponent> getAllLots() {
+        return new ArrayList<>(lots.values());
     }
 }
