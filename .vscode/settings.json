@@ -1,5 +1,4 @@
 {
-    "java.home": "path_to_your_jdk",
     "java.project.sourcePaths": ["src"],
     "java.project.outputPath": "bin",
     "java.project.referencedLibraries": [
