@@ -1,6 +1,5 @@
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
@@ -15,61 +14,79 @@ public class RealEstateFrame extends JFrame implements ActionListener {
     private JTable resultsTable;
     private LotTableModel tableModel;
     private TableRowSorter<LotTableModel> sorter;
+    private JProgressBar progressBar;
+    private JLabel statusLabel;
+    private boolean dataModified = false;
     
     public RealEstateFrame() {
         super("Real Estate Management System");
         setLayout(new BorderLayout());
         
+        // Add status bar
+        JPanel statusPanel = new JPanel(new BorderLayout());
+        statusLabel = new JLabel("Ready");
+        progressBar = new JProgressBar();
+        progressBar.setVisible(false);
+        statusPanel.add(statusLabel, BorderLayout.WEST);
+        statusPanel.add(progressBar, BorderLayout.EAST);
+        add(statusPanel, BorderLayout.SOUTH);
+        
         // Initialize lot manager
         lotManager = new LotManager();
         
-        // Create tabbed pane for different sections
+        // Create tabbed pane
         JTabbedPane tabbedPane = new JTabbedPane();
-        
-        // Tab 1: Property Management
-        JPanel managementPanel = createManagementPanel();
-        tabbedPane.addTab("Property Management", managementPanel);
-        
-        // Tab 2: Search Properties
-        JPanel searchTab = createSearchTab();
-        tabbedPane.addTab("Search Properties", searchTab);
-        
+        tabbedPane.addTab("Property Management", createManagementPanel());
+        tabbedPane.addTab("Search Properties", createSearchTab());
         add(tabbedPane, BorderLayout.CENTER);
         
-        // Initialize the lots list with all lots from the manager
+        // Initialize lots list
         lots = new ArrayList<>(lotManager.getAllLots());
         
-        // Display all lots when application starts
+        // Display lots
         showAllLots();
         displayLots();
+        
+        // Add window listener for saving on exit
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (dataModified) {
+                    saveDataBeforeExit();
+                }
+            }
+        });
+    }
+    
+    private void saveDataBeforeExit() {
+        int response = JOptionPane.showConfirmDialog(this, 
+                                                 "Save changes before exiting?",
+                                                 "Save Changes",
+                                                 JOptionPane.YES_NO_OPTION);
+        if (response == JOptionPane.YES_OPTION) {
+            lotManager.saveData();
+        }
     }
     
     private JPanel createManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Initialize the display area
         displayArea = new JTextArea(20, 50);
         displayArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(displayArea);
         panel.add(scrollPane, BorderLayout.CENTER);
         
-        // Create control panel
-        controlPanel = new JPanel();
-        controlPanel.setLayout(new GridLayout(0, 1, 5, 5));
+        controlPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         
-        // Add lot button
         JButton addLotButton = new JButton("Add New Lot");
         addLotButton.addActionListener(e -> addNewLot());
         
-        // View lots button
         JButton viewLotsButton = new JButton("View All Lots");
         viewLotsButton.addActionListener(e -> displayLots());
         
-        // Add decorations button
         JButton addDecorationsButton = new JButton("Add Decorations to Lot");
         addDecorationsButton.addActionListener(e -> addDecorations());
         
-        // Status change buttons
         JButton reserveLotButton = new JButton("Reserve Lot");
         reserveLotButton.addActionListener(e -> changeLotStatus("reserve"));
         
@@ -89,22 +106,18 @@ public class RealEstateFrame extends JFrame implements ActionListener {
     private JPanel createSearchTab() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Add search panel
         searchPanel = new SearchPanel(this);
         panel.add(searchPanel, BorderLayout.NORTH);
         
-        // Create table for search results
         tableModel = new LotTableModel();
         resultsTable = new JTable(tableModel);
         resultsTable.setFillsViewportHeight(true);
         resultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        // Set up sorting
         sorter = new TableRowSorter<>(tableModel);
         resultsTable.setRowSorter(sorter);
         
-        JScrollPane tableScrollPane = new JScrollPane(resultsTable);
-        panel.add(tableScrollPane, BorderLayout.CENTER);
+        panel.add(new JScrollPane(resultsTable), BorderLayout.CENTER);
         
         return panel;
     }
@@ -126,6 +139,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
             lotManager.addLot(block + "," + lotNumber + "," + size + "," + price);
             
             displayArea.setText("New lot added successfully!\n" + newLot.getDescription());
+            markDataModified();
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Please enter valid numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -137,8 +151,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
             return;
         }
         
-        StringBuilder sb = new StringBuilder();
-        sb.append("Available Lots:\n\n");
+        StringBuilder sb = new StringBuilder("Available Lots:\n\n");
         
         for (int i = 0; i < lots.size(); i++) {
             sb.append(i + 1).append(". ").append(lots.get(i).getDescription()).append("\n");
@@ -174,23 +187,23 @@ public class RealEstateFrame extends JFrame implements ActionListener {
             null, options, options[0]);
         
         LotComponent decoratedLot = lots.get(index);
+        LotComponent updatedLot = decoratedLot;
         
         switch (choice) {
-            case 0: // Landscaping
-                decoratedLot = new LandscapingDecorator(decoratedLot);
-                break;
-            case 1: // Fencing
-                decoratedLot = new FencingDecorator(decoratedLot);
-                break;
-            case 2: // Pool
-                decoratedLot = new PoolDecorator(decoratedLot);
-                break;
-            default:
-                return;
+            case 0: updatedLot = LotFactory.addFeature(decoratedLot, "landscaping"); break;
+            case 1: updatedLot = LotFactory.addFeature(decoratedLot, "fencing"); break;
+            case 2: updatedLot = LotFactory.addFeature(decoratedLot, "pool"); break;
+            default: return;
         }
         
-        lots.set(index, decoratedLot);
-        displayArea.setText("Decoration added successfully!\n" + decoratedLot.getDescription());
+        // Only update if something changed
+        if (updatedLot != decoratedLot) {
+            lots.set(index, updatedLot);
+            displayArea.setText("Decoration added successfully!\n" + updatedLot.getDescription());
+            markDataModified();
+        } else {
+            displayArea.setText("This feature is already applied to the lot.");
+        }
     }
     
     private void changeLotStatus(String action) {
@@ -214,70 +227,56 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         int index = Integer.parseInt(selectedLot.split("\\.")[0]) - 1;
         LotComponent lot = lots.get(index);
         
-        if (action.equals("reserve") && lot.getStatus().equals("SOLD")) {
+        if (action.equals("reserve") && lot.getStatus().equals(LotFactory.STATUS_SOLD)) {
             JOptionPane.showMessageDialog(this, "Cannot reserve a sold lot", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
-        LotComponent updatedLot;
-        if (action.equals("reserve")) {
-            updatedLot = new ReservedLotDecorator(lot);
-            displayArea.setText("Lot reserved successfully!\n" + updatedLot.getDescription());
-        } else {
-            updatedLot = new SoldLotDecorator(lot);
-            displayArea.setText("Lot sold successfully!\n" + updatedLot.getDescription());
-        }
+        LotComponent updatedLot = LotFactory.changeStatus(lot, action);
         
-        lots.set(index, updatedLot);
-        
-        // Get base lot to get ID
-        Lot baseLot = findBaseLot(lot);
-        if (baseLot != null) {
-            if (action.equals("reserve")) {
-                lotManager.reserveLot(baseLot.getId());
-            } else {
-                lotManager.sellLot(baseLot.getId());
+        // Only update if status changed
+        if (updatedLot != lot) {
+            lots.set(index, updatedLot);
+            displayArea.setText("Lot " + action + "d successfully!\n" + updatedLot.getDescription());
+            
+            // Update in manager
+            Lot baseLot = LotFactory.getBaseLot(lot);
+            if (baseLot != null) {
+                if (action.equals("reserve")) {
+                    lotManager.reserveLot(baseLot.getId());
+                } else {
+                    lotManager.sellLot(baseLot.getId());
+                }
             }
+            markDataModified();
+        } else {
+            displayArea.setText("Lot status already up to date.");
         }
     }
     
     private String getLotBaseDescription(LotComponent lot) {
-        // Get the base lot description without decorations
-        if (lot instanceof LotDecorator) {
-            return getLotBaseDescription(((LotDecorator) lot).getDecoratedLot());
-        } else {
-            return ((Lot) lot).getId(); 
+        Lot baseLot = LotFactory.getBaseLot(lot);
+        if (baseLot != null) {
+            return baseLot.getId();
         }
-    }
-    
-    private Lot findBaseLot(LotComponent component) {
-        if (component instanceof Lot) {
-            return (Lot) component;
-        } else if (component instanceof LotDecorator) {
-            return findBaseLot(((LotDecorator) component).getDecoratedLot());
-        }
-        return null;
+        return "Unknown Lot";
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-        
-        switch (command) {
-            case "search":
-                performSearch();
-                break;
-            case "showAll":
-                showAllLots();
-                break;
-            case "reset":
+        switch (e.getActionCommand()) {
+            case "search" -> performSearch();
+            case "showAll" -> showAllLots();
+            case "reset" -> {
                 searchPanel.resetFields();
                 tableModel.setLots(new ArrayList<>());
-                break;
+            }
         }
     }
     
     private void performSearch() {
+        statusLabel.setText("Searching...");
+        
         Double minSize = searchPanel.getMinSize();
         Double maxSize = searchPanel.getMaxSize();
         Double minPrice = searchPanel.getMinPrice();
@@ -285,12 +284,24 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         Integer blockNumber = searchPanel.getBlockNumber();
         String status = searchPanel.getStatus();
         
-        List<LotComponent> results = lotManager.searchLots(minSize, maxSize, minPrice, maxPrice, blockNumber, status);
-        tableModel.setLots(results);
+        try {
+            List<LotComponent> results = lotManager.searchLots(minSize, maxSize, minPrice, maxPrice, blockNumber, status);
+            tableModel.setLots(results);
+            statusLabel.setText("Found " + results.size() + " properties");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error performing search", "Search Error", JOptionPane.ERROR_MESSAGE);
+            statusLabel.setText("Search error");
+        }
     }
     
     private void showAllLots() {
+        statusLabel.setText("Loading all properties...");
         List<LotComponent> allLots = lotManager.getAllLots();
         tableModel.setLots(allLots);
+        statusLabel.setText("Displaying all " + allLots.size() + " properties");
+    }
+    
+    private void markDataModified() {
+        dataModified = true;
     }
 }

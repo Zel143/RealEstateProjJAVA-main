@@ -1,3 +1,6 @@
+/**
+ * Abstract base decorator class for all Lot decorators
+ */
 public abstract class LotDecorator implements LotComponent {
     protected LotComponent decoratedLot;
 

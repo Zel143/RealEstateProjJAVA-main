@@ -1,22 +1,4 @@
-public class PoolDecorator extends LotDecorator {
-    private static final double POOL_PRICE = 25000.0;
-    
-    public PoolDecorator(LotComponent decoratedLot) {
-        super(decoratedLot);
-    }
-    
-    @Override
-    public String getDescription() {
-        return decoratedLot.getDescription() + " + Swimming Pool";
-    }
-    
-    @Override
-    public double getPrice() {
-        return decoratedLot.getPrice() + POOL_PRICE;
-    }
-
-    @Override
-    public String getStatus() {
-        return decoratedLot.getStatus(); // Pass through the status
-    }
-}
+// This class is now redundant and can be removed.
+// All functionality has been moved to the unified LotDecorator class
+// that handles both feature and status decorations with price constants
+// defined in LotFactory.

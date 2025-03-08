@@ -36,7 +36,7 @@ public class LotTableModel extends AbstractTableModel {
         }
         
         LotComponent lot = lots.get(rowIndex);
-        Lot baseLot = findBaseLot(lot);
+        Lot baseLot = LotFactory.getBaseLot(lot);
         
         if (baseLot == null) {
             return null;
@@ -77,26 +77,17 @@ public class LotTableModel extends AbstractTableModel {
         return null;
     }
 
-    private Lot findBaseLot(LotComponent component) {
-        if (component instanceof Lot) {
-            return (Lot) component;
-        } else if (component instanceof LotDecorator) {
-            return findBaseLot(((LotDecorator) component).getDecoratedLot());
-        }
-        return null;
-    }
-
     private String extractFeatures(LotComponent lot) {
         String description = lot.getDescription();
         StringBuilder features = new StringBuilder();
         
-        if (description.contains("+ Swimming Pool")) {
+        if (description.contains("+ " + LotFactory.FEATURE_POOL)) {
             features.append("Pool ");
         }
-        if (description.contains("+ Premium Landscaping")) {
+        if (description.contains("+ " + LotFactory.FEATURE_LANDSCAPING)) {
             features.append("Landscaping ");
         }
-        if (description.contains("+ Perimeter Fencing")) {
+        if (description.contains("+ " + LotFactory.FEATURE_FENCING)) {
             features.append("Fencing ");
         }
         

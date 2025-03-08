@@ -1,19 +1,17 @@
 import java.awt.*;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
 public class SearchPanel extends JPanel {
-    // Search fields
     private JTextField minSizeField, maxSizeField;
     private JTextField minPriceField, maxPriceField;
     private JComboBox<Integer> blockComboBox;
     private JComboBox<String> statusComboBox;
-    
-    // Buttons
     private JButton searchButton;
     private JButton showAllButton;
     private JButton resetButton;
+    private JLabel validationLabel;
     
     public SearchPanel(ActionListener listener) {
         setLayout(new BorderLayout());
@@ -21,7 +19,7 @@ public class SearchPanel extends JPanel {
             BorderFactory.createEtchedBorder(), "Search Properties", 
             TitledBorder.CENTER, TitledBorder.TOP));
         
-        JPanel criteriaPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+        JPanel criteriaPanel = new JPanel(new GridLayout(5, 1, 5, 5));
         
         // Size criteria
         JPanel sizePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -54,9 +52,7 @@ public class SearchPanel extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, 
                     int index, boolean isSelected, boolean cellHasFocus) {
-                if (value == null) {
-                    value = "Any";
-                }
+                if (value == null) value = "Any";
                 return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             }
         });
@@ -70,6 +66,11 @@ public class SearchPanel extends JPanel {
         statusComboBox = new JComboBox<>(statusOptions);
         statusPanel.add(statusComboBox);
         criteriaPanel.add(statusPanel);
+        
+        // Validation message
+        validationLabel = new JLabel(" ");
+        validationLabel.setForeground(Color.RED);
+        criteriaPanel.add(validationLabel);
         
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -101,6 +102,19 @@ public class SearchPanel extends JPanel {
         maxPriceField.setText("");
         blockComboBox.setSelectedIndex(0);
         statusComboBox.setSelectedIndex(0);
+        validationLabel.setText(" ");
+    }
+    
+    public void setControlsEnabled(boolean enabled) {
+        minSizeField.setEnabled(enabled);
+        maxSizeField.setEnabled(enabled);
+        minPriceField.setEnabled(enabled);
+        maxPriceField.setEnabled(enabled);
+        blockComboBox.setEnabled(enabled);
+        statusComboBox.setEnabled(enabled);
+        searchButton.setEnabled(enabled);
+        showAllButton.setEnabled(enabled);
+        resetButton.setEnabled(enabled);
     }
     
     public Double getMinSize() {

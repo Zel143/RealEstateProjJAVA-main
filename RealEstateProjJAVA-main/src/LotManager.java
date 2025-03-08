@@ -1,38 +1,73 @@
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class LotManager {
-    private Map<String, LotComponent> lots;
-    private int lotCounter;
+    private final Map<String, LotComponent> lots = new ConcurrentHashMap<>();
+    private final PerformanceCache<SearchCriteria, List<LotComponent>> searchCache;
+    
+    // Pre-compiled predicates for common queries
+    private final Map<String, Predicate<LotComponent>> commonPredicates = new ConcurrentHashMap<>();
 
     public LotManager() {
-        lots = new HashMap<>();
-        lotCounter = 0;
+        // Initialize search cache (50 entries, 30 second expiration)
+        searchCache = new PerformanceCache<>(50, 30000);
         
-        // Initialize with 5 blocks of 20 lots each
-        initializeDefaultLots();
+        // Initialize common predicates
+        setupCommonPredicates();
+        
+        // Try to load existing data first
+        Map<String, LotComponent> loadedLots = DataHandler.loadLots();
+        if (loadedLots != null && !loadedLots.isEmpty()) {
+            lots.putAll(loadedLots);
+        } else {
+            initializeDefaultLots();
+        }
+        
+        // Add shutdown hook to save data on application exit
+        Runtime.getRuntime().addShutdownHook(new Thread(this::saveData));
+    }
+    
+    private void setupCommonPredicates() {
+        // Available lots
+        commonPredicates.put("available", 
+            lot -> LotFactory.STATUS_AVAILABLE.equals(lot.getStatus()));
+        
+        // Reserved lots
+        commonPredicates.put("reserved", 
+            lot -> LotFactory.STATUS_RESERVED.equals(lot.getStatus()));
+        
+        // Sold lots
+        commonPredicates.put("sold", 
+            lot -> LotFactory.STATUS_SOLD.equals(lot.getStatus()));
+            
+        // Lots with pools
+        commonPredicates.put("withPool", 
+            lot -> lot.getDescription().contains(LotFactory.FEATURE_POOL));
+            
+        // Premium lots (> $250k)
+        commonPredicates.put("premium", 
+            lot -> lot.getPrice() > 250000);
+    }
+
+    public boolean saveData() {
+        return DataHandler.saveLots(lots);
     }
 
     private void initializeDefaultLots() {
         // Create 5 blocks with 20 lots each
         for (int block = 1; block <= 5; block++) {
             for (int lotNum = 1; lotNum <= 20; lotNum++) {
-                // Calculate base size and price based on block and lot number
-                // Higher block numbers and lot numbers get bigger sizes and higher prices
-                double baseSize = 200 + (block * 20) + (lotNum * 5); // Sizes from 225 to 500 sqm
-                double basePrice = 100000 + (block * 15000) + (lotNum * 2500); // Prices from $117,500 to $300,000
+                double baseSize = 200 + (block * 20) + (lotNum * 5); 
+                double basePrice = 100000 + (block * 15000) + (lotNum * 2500);
                 
-                // Create the lot and add it to the map
                 Lot newLot = new Lot(block, lotNum, baseSize, basePrice);
                 lots.put(newLot.getId(), newLot);
             }
         }
-        
-        // Log the initialization for debugging
-        System.out.println("Initialized " + lots.size() + " lots");
     }
 
     public String addLot(String lotDetails) {
@@ -48,20 +83,11 @@ public class LotManager {
             double price = Double.parseDouble(details[3]);
 
             // Validate input
-            if (block < 1 || block > 5) {
-                return "Block number must be between 1 and 5";
-            }
-            if (lotNumber < 1 || lotNumber > 20) {
-                return "Lot number must be between 1 and 20";
-            }
-            if (size <= 0) {
-                return "Size must be positive";
-            }
-            if (price <= 0) {
-                return "Price must be positive";
+            if (block < 1 || block > 5 || lotNumber < 1 || lotNumber > 20 || 
+                size <= 0 || price <= 0) {
+                return "Invalid input values";
             }
 
-            // Check if the lot already exists - Fix the ID format
             String checkId = "Lot" + block + " " + lotNumber;
             if (lots.containsKey(checkId)) {
                 return "Lot already exists with this block and lot number";
@@ -69,159 +95,71 @@ public class LotManager {
 
             Lot newLot = new Lot(block, lotNumber, size, price);
             lots.put(newLot.getId(), newLot);
+            clearSearchCache();
             
             return "Lot added successfully:\n" + newLot.getDescription();
         } catch (NumberFormatException e) {
-            return "Invalid input: Please enter numeric values for block, lot number, size, and price";
+            return "Invalid input: Please enter numeric values";
         }
     }
 
-    public String searchLot(String lotId) {
-        LotComponent lot = lots.get(lotId);
-        if (lot != null) {
-            return "Lot found:\n" + lot.getDescription();
-        } else {
-            return "Lot not found with ID: " + lotId;
-        }
-    }
-
-    public String sellLot(String lotId) {
+    public String changeLotStatus(String lotId, String status) {
         LotComponent lotComponent = lots.get(lotId);
-        if (lotComponent != null) {
-            // Instead of directly modifying status, use the decorator pattern consistently
-            lots.put(lotId, new SoldLotDecorator(lotComponent));
-            return "Lot has been sold:\n" + lots.get(lotId).getDescription();
-        } else {
-            return "Lot not found with ID: " + lotId;
+        if (lotComponent == null) {
+            return "Lot not found";
         }
+        
+        // Validate status change
+        if ("reserve".equalsIgnoreCase(status) && 
+            LotFactory.STATUS_SOLD.equals(lotComponent.getStatus())) {
+            return "Cannot reserve a sold lot";
+        }
+        
+        // Apply status change using the optimized decorator
+        String newStatus = "sell".equals(status.toLowerCase()) || "sold".equals(status.toLowerCase()) 
+            ? LotFactory.STATUS_SOLD 
+            : LotFactory.STATUS_RESERVED;
+        
+        // Only apply if it would change the status
+        if (!newStatus.equals(lotComponent.getStatus())) {
+            lots.put(lotId, new StatusDecorator(lotComponent, newStatus));
+            clearSearchCache();
+        }
+        
+        return "Lot has been " + (status.toLowerCase().endsWith("d") ? status : status + "d");
+    }
+    
+    // Simplified status methods that delegate to changeLotStatus
+    public String sellLot(String lotId) {
+        return changeLotStatus(lotId, "sell");
     }
 
     public String reserveLot(String lotId) {
-        LotComponent lotComponent = lots.get(lotId);
-        if (lotComponent != null) {
-            // Check if already sold
-            if (lotComponent.getDescription().contains("Status: SOLD")) {
-                return "Cannot reserve lot. Current status: SOLD";
-            }
-            // Use decorator pattern consistently
-            lots.put(lotId, new ReservedLotDecorator(lotComponent));
-            return "Lot has been reserved:\n" + lots.get(lotId).getDescription();
-        } else {
-            return "Lot not found with ID: " + lotId;
-        }
+        return changeLotStatus(lotId, "reserve");
     }
 
-    public String generateReport() {
-        if (lots.isEmpty()) {
-            return "No lots available in the system.";
-        }
-
-        StringBuilder report = new StringBuilder("REAL ESTATE PROPERTY REPORT\n");
-        report.append("==============================\n");
-        report.append(String.format("%-10s %-8s %-8s %-10s %-15s %-10s\n", 
-                "ID", "Block", "Lot#", "Size(sqm)", "Price($)", "Status"));
-        report.append("------------------------------------------------------\n");
-
-        for (Map.Entry<String, LotComponent> entry : lots.entrySet()) {
-            LotComponent component = entry.getValue();
-            Lot baseLot = findBaseLot(component);
-            
-            if (baseLot != null) {
-                // Format with base lot info but use the decorated description/price
-                report.append(String.format("%-10s %-8d %-8d %-10.2f %-15.2f %-30s\n",
-                        entry.getKey(), 
-                        baseLot.getBlock(), 
-                        baseLot.getLotNumber(), 
-                        baseLot.getSize(), 
-                        component.getPrice(),
-                        component.getStatus())); // Use getStatus directly
-            } else {
-                report.append(component.getDescription()).append("\n");
-            }
-        }
-
-        report.append("\nTotal Properties: ").append(lots.size());
-        return report.toString();
-    }
-
-    public String searchLotsByBlock(int block) {
-        List<LotComponent> foundLots = new ArrayList<>();
-        for (LotComponent lot : lots.values()) {
-            Lot baseLot = findBaseLot(lot);
-            if (baseLot != null && baseLot.getBlock() == block) {
-                foundLots.add(lot);
-            }
-        }
-        
-        return generateSearchResults(foundLots, "Lots in Block " + block);
-    }
-
-    public String searchLotsBySize(double minSize, double maxSize) {
-        List<LotComponent> foundLots = new ArrayList<>();
-        for (LotComponent lot : lots.values()) {
-            Lot baseLot = findBaseLot(lot);
-            if (baseLot != null) {
-                double lotSize = baseLot.getSize();
-                if (lotSize >= minSize && lotSize <= maxSize) {
-                    foundLots.add(lot);
-                }
-            }
-        }
-        
-        return generateSearchResults(foundLots, "Lots with size between " + minSize + " and " + maxSize + " sqm");
-    }
-
-    public String searchLotsByPrice(double minPrice, double maxPrice) {
-        List<LotComponent> foundLots = new ArrayList<>();
-        for (LotComponent lot : lots.values()) {
-            double lotPrice = lot.getPrice();
-            if (lotPrice >= minPrice && lotPrice <= maxPrice) {
-                foundLots.add(lot);
-            }
-        }
-        
-        return generateSearchResults(foundLots, "Lots with price between $" + minPrice + " and $" + maxPrice);
-    }
-
-    private String generateSearchResults(List<LotComponent> lots, String title) {
-        if (lots.isEmpty()) {
-            return "No lots found matching your criteria.";
-        }
-
-        StringBuilder results = new StringBuilder(title + "\n");
-        results.append("==============================\n");
-        
-        for (LotComponent lot : lots) {
-            results.append(lot.getDescription()).append("\n");
-        }
-        
-        results.append("\nTotal Properties Found: ").append(lots.size());
-        return results.toString();
-    }
-    
     public LotComponent addFeatureToLot(String lotId, String feature) {
         LotComponent lot = lots.get(lotId);
         if (lot == null) {
             return null;
         }
         
-        LotComponent decoratedLot;
-        switch (feature.toLowerCase()) {
-            case "pool":
-                decoratedLot = new PoolDecorator(lot);
-                break;
-            case "fencing":
-                decoratedLot = new FencingDecorator(lot);
-                break;
-            case "landscaping":
-                decoratedLot = new LandscapingDecorator(lot);
-                break;
-            default:
-                return lot; // No changes if feature not recognized
+        // First check if the lot already has this feature
+        String featureName = switch (feature.toLowerCase()) {
+            case "pool" -> LotFactory.FEATURE_POOL;
+            case "fencing" -> LotFactory.FEATURE_FENCING;
+            case "landscaping" -> LotFactory.FEATURE_LANDSCAPING;
+            default -> null;
+        };
+        
+        if (featureName != null && !LotFactory.hasFeature(lot, featureName)) {
+            LotComponent decoratedLot = LotFactory.addFeature(lot, feature);
+            lots.put(lotId, decoratedLot);
+            clearSearchCache();
+            return decoratedLot;
         }
         
-        lots.put(lotId, decoratedLot);
-        return decoratedLot;
+        return lot;
     }
 
     private Lot findBaseLot(LotComponent component) {
@@ -232,60 +170,125 @@ public class LotManager {
         }
         return null;
     }
-
-    private String getStatusFromComponent(LotComponent component) {
-        // Use the getStatus method we've added to all components
-        return component.getStatus();
+    
+    // Get lots by a named predicate
+    public List<LotComponent> getLotsByPredicate(String predicateName) {
+        Predicate<LotComponent> predicate = commonPredicates.get(predicateName.toLowerCase());
+        if (predicate == null) {
+            return new ArrayList<>();
+        }
+        
+        return lots.values().stream()
+            .filter(predicate)
+            .collect(Collectors.toList());
     }
     
-    public List<LotComponent> searchLots(Double minSize, Double maxSize, Double minPrice, Double maxPrice, 
-                                        Integer blockNumber, String status) {
-        List<LotComponent> results = new ArrayList<>(lots.values());
+    // Optimized search method using predicate composition for efficiency
+    public List<LotComponent> searchLots(Double minSize, Double maxSize, Double minPrice, 
+                                       Double maxPrice, Integer blockNumber, String status) {
+        // Create a search criteria key for caching
+        SearchCriteria criteria = new SearchCriteria(minSize, maxSize, minPrice, maxPrice, blockNumber, status);
         
-        // Filter by block if specified
-        if (blockNumber != null) {
-            results = results.stream()
-                .filter(lot -> {
-                    Lot baseLot = findBaseLot(lot);
-                    return baseLot != null && baseLot.getBlock() == blockNumber;
-                })
-                .collect(Collectors.toList());
-        }
-        
-        // Filter by size range if specified
-        if (minSize != null || maxSize != null) {
-            double min = (minSize != null) ? minSize : 0;
-            double max = (maxSize != null) ? maxSize : Double.MAX_VALUE;
+        // Use cached results if available
+        return searchCache.get(criteria, () -> {
+            // Start with an empty predicate (always true)
+            Predicate<LotComponent> predicate = lot -> true;
             
-            results = results.stream()
-                .filter(lot -> {
-                    Lot baseLot = findBaseLot(lot);
-                    return baseLot != null && baseLot.getSize() >= min && baseLot.getSize() <= max;
-                })
-                .collect(Collectors.toList());
-        }
-        
-        // Filter by price range if specified
-        if (minPrice != null || maxPrice != null) {
-            double min = (minPrice != null) ? minPrice : 0;
-            double max = (maxPrice != null) ? maxPrice : Double.MAX_VALUE;
+            // Apply each filter condition if specified
+            if (blockNumber != null) {
+                predicate = predicate.and(lot -> getBaseLotBlock(lot) == blockNumber);
+            }
             
-            results = results.stream()
-                .filter(lot -> lot.getPrice() >= min && lot.getPrice() <= max)
+            if (minSize != null || maxSize != null) {
+                predicate = predicate.and(lot -> {
+                    double size = getBaseLotSize(lot);
+                    return (minSize == null || size >= minSize) && 
+                           (maxSize == null || size <= maxSize);
+                });
+            }
+            
+            if (minPrice != null || maxPrice != null) {
+                predicate = predicate.and(lot -> {
+                    double price = lot.getPrice();
+                    return (minPrice == null || price >= minPrice) && 
+                           (maxPrice == null || price <= maxPrice);
+                });
+            }
+            
+            if (status != null) {
+                predicate = predicate.and(lot -> lot.getStatus().equals(status));
+            }
+            
+            // Apply the predicate to filter lots
+            return lots.values().stream()
+                .filter(predicate)
                 .collect(Collectors.toList());
-        }
-        
-        // Filter by status if specified
-        if (status != null && !status.isEmpty()) {
-            results = results.stream()
-                .filter(lot -> lot.getStatus().equals(status))
-                .collect(Collectors.toList());
-        }
-        
-        return results;
+        });
+    }
+    
+    // Helper methods
+    private int getBaseLotBlock(LotComponent lot) {
+        Lot baseLot = LotFactory.getBaseLot(lot);
+        return baseLot != null ? baseLot.getBlock() : 0;
+    }
+    
+    private double getBaseLotSize(LotComponent lot) {
+        Lot baseLot = LotFactory.getBaseLot(lot);
+        return baseLot != null ? baseLot.getSize() : 0;
     }
     
     public List<LotComponent> getAllLots() {
         return new ArrayList<>(lots.values());
+    }
+    
+    private void clearSearchCache() {
+        searchCache.clear();
+    }
+    
+    // Search criteria class for caching
+    private static class SearchCriteria {
+        final Double minSize;
+        final Double maxSize;
+        final Double minPrice;
+        final Double maxPrice;
+        final Integer blockNumber;
+        final String status;
+        
+        SearchCriteria(Double minSize, Double maxSize, Double minPrice, Double maxPrice, 
+                      Integer blockNumber, String status) {
+            this.minSize = minSize;
+            this.maxSize = maxSize;
+            this.minPrice = minPrice;
+            this.maxPrice = maxPrice;
+            this.blockNumber = blockNumber;
+            this.status = status;
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof SearchCriteria other)) return false;
+            return equals(minSize, other.minSize) &&
+                   equals(maxSize, other.maxSize) &&
+                   equals(minPrice, other.minPrice) &&
+                   equals(maxPrice, other.maxPrice) &&
+                   equals(blockNumber, other.blockNumber) &&
+                   equals(status, other.status);
+        }
+        
+        private boolean equals(Object a, Object b) {
+            return (a == null && b == null) || (a != null && a.equals(b));
+        }
+        
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 31 * hash + (minSize == null ? 0 : minSize.hashCode());
+            hash = 31 * hash + (maxSize == null ? 0 : maxSize.hashCode());
+            hash = 31 * hash + (minPrice == null ? 0 : minPrice.hashCode());
+            hash = 31 * hash + (maxPrice == null ? 0 : maxPrice.hashCode());
+            hash = 31 * hash + (blockNumber == null ? 0 : blockNumber.hashCode());
+            hash = 31 * hash + (status == null ? 0 : status.hashCode());
+            return hash;
+        }
     }
 }
