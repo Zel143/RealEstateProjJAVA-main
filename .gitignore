@@ -1,1 +1,5 @@
 *.class
+*.log
+*.dat
+*.bak
+*.properties
