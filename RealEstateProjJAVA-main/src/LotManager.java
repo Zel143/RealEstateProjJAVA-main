@@ -11,6 +11,25 @@ public class LotManager {
     public LotManager() {
         lots = new HashMap<>();
         lotCounter = 0;
+        
+        // Initialize with 5 blocks of 20 lots each
+        initializeDefaultLots();
+    }
+
+    private void initializeDefaultLots() {
+        // Create 5 blocks with 20 lots each
+        for (int block = 1; block <= 5; block++) {
+            for (int lotNum = 1; lotNum <= 20; lotNum++) {
+                // Calculate base size and price based on block and lot number
+                // Higher block numbers and lot numbers get bigger sizes and higher prices
+                double baseSize = 200 + (block * 20) + (lotNum * 5); // Sizes from 225 to 500 sqm
+                double basePrice = 100000 + (block * 15000) + (lotNum * 2500); // Prices from $117,500 to $300,000
+                
+                // Create the lot and add it to the map
+                Lot newLot = new Lot(block, lotNum, baseSize, basePrice);
+                lots.put(newLot.getId(), newLot);
+            }
+        }
     }
 
     public String addLot(String lotDetails) {
