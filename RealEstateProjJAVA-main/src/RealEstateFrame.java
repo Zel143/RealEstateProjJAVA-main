@@ -35,6 +35,13 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         tabbedPane.addTab("Search Properties", searchTab);
         
         add(tabbedPane, BorderLayout.CENTER);
+        
+        // Initialize the lots list with all lots from the manager
+        lots = new ArrayList<>(lotManager.getAllLots());
+        
+        // Display all lots when application starts
+        showAllLots();
+        displayLots();
     }
     
     private JPanel createManagementPanel() {

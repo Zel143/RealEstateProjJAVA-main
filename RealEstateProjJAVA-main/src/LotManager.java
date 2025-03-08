@@ -30,6 +30,9 @@ public class LotManager {
                 lots.put(newLot.getId(), newLot);
             }
         }
+        
+        // Log the initialization for debugging
+        System.out.println("Initialized " + lots.size() + " lots");
     }
 
     public String addLot(String lotDetails) {
