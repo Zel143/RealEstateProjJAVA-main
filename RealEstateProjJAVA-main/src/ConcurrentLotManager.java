@@ -1,18 +1,36 @@
+import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Thread-safe facade for LotManager that optimizes for concurrent access
  */
-public class ConcurrentLotManager {
-    private final LotManager lotManager;
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final PerformanceCache<CacheKey, List<LotComponent>> searchCache;
+public class ConcurrentLotManager implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(ConcurrentLotManager.class.getName());
     
+    private final LotManager lotManager;
+    private final transient ReadWriteLock lock;
+    private final transient PerformanceCache<CacheKey, List<LotComponent>> searchCache;
+    
+    /**
+     * Create a thread-safe manager
+     * @param lotManager the delegate lot manager
+     */
     public ConcurrentLotManager(LotManager lotManager) {
-        this.lotManager = lotManager;
+        this.lotManager = Objects.requireNonNull(lotManager, "LotManager cannot be null");
+        this.lock = new ReentrantReadWriteLock();
         this.searchCache = new PerformanceCache<>(50, 30_000); // Cache 50 searches for 30 seconds
+    }
+    
+    // Get lock (for subclasses)
+    protected ReadWriteLock getLock() {
+        return lock;
     }
     
     /**
@@ -37,11 +55,18 @@ public class ConcurrentLotManager {
     }
     
     /**
+     * Get lots by named predicate
+     */
+    public List<LotComponent> getLotsByPredicate(String predicateName) {
+        return withReadLock(() -> lotManager.getLotsByPredicate(predicateName));
+    }
+    
+    /**
      * Adds a new lot (invalidates cache)
      */
     public String addLot(String lotDetails) {
         String result = withWriteLock(() -> lotManager.addLot(lotDetails));
-        searchCache.clear();
+        invalidateCache();
         return result;
     }
     
@@ -50,7 +75,7 @@ public class ConcurrentLotManager {
      */
     public String reserveLot(String lotId) {
         String result = withWriteLock(() -> lotManager.reserveLot(lotId));
-        searchCache.clear();
+        invalidateCache();
         return result;
     }
     
@@ -59,7 +84,7 @@ public class ConcurrentLotManager {
      */
     public String sellLot(String lotId) {
         String result = withWriteLock(() -> lotManager.sellLot(lotId));
-        searchCache.clear();
+        invalidateCache();
         return result;
     }
     
@@ -68,7 +93,7 @@ public class ConcurrentLotManager {
      */
     public LotComponent addFeatureToLot(String lotId, String feature) {
         LotComponent result = withWriteLock(() -> lotManager.addFeatureToLot(lotId, feature));
-        searchCache.clear();
+        invalidateCache();
         return result;
     }
     
@@ -80,12 +105,22 @@ public class ConcurrentLotManager {
     }
     
     /**
+     * Invalidate search cache
+     */
+    protected void invalidateCache() {
+        searchCache.clear();
+    }
+    
+    /**
      * Execute a function with a read lock
      */
-    private <T> T withReadLock(Supplier<T> supplier) {
+    protected <T> T withReadLock(Supplier<T> supplier) {
         lock.readLock().lock();
         try {
             return supplier.get();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error in read operation", e);
+            throw e;
         } finally {
             lock.readLock().unlock();
         }
@@ -94,26 +129,24 @@ public class ConcurrentLotManager {
     /**
      * Execute a function with a write lock
      */
-    private <T> T withWriteLock(Supplier<T> supplier) {
+    protected <T> T withWriteLock(Supplier<T> supplier) {
         lock.writeLock().lock();
         try {
             return supplier.get();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error in write operation", e);
+            throw e;
         } finally {
             lock.writeLock().unlock();
         }
     }
     
     /**
-     * Functional interface for suppliers
-     */
-    private interface Supplier<T> {
-        T get();
-    }
-    
-    /**
      * Cache key for search operations
      */
-    private static class CacheKey {
+    private static class CacheKey implements Serializable {
+        private static final long serialVersionUID = 1L;
+        
         final Double minSize;
         final Double maxSize;
         final Double minPrice;
@@ -133,30 +166,29 @@ public class ConcurrentLotManager {
         
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof CacheKey)) return false;
-            CacheKey other = (CacheKey) obj;
-            return equals(minSize, other.minSize) &&
-                   equals(maxSize, other.maxSize) &&
-                   equals(minPrice, other.minPrice) &&
-                   equals(maxPrice, other.maxPrice) &&
-                   equals(blockNumber, other.blockNumber) &&
-                   equals(status, other.status);
-        }
-        
-        private boolean equals(Object a, Object b) {
-            return (a == null && b == null) || (a != null && a.equals(b));
+            if (!(obj instanceof CacheKey other)) return false;
+            return Objects.equals(minSize, other.minSize) &&
+                   Objects.equals(maxSize, other.maxSize) &&
+                   Objects.equals(minPrice, other.minPrice) &&
+                   Objects.equals(maxPrice, other.maxPrice) &&
+                   Objects.equals(blockNumber, other.blockNumber) &&
+                   Objects.equals(status, other.status);
         }
         
         @Override
         public int hashCode() {
-            int hash = 7;
-            hash = 31 * hash + (minSize == null ? 0 : minSize.hashCode());
-            hash = 31 * hash + (maxSize == null ? 0 : maxSize.hashCode());
-            hash = 31 * hash + (minPrice == null ? 0 : minPrice.hashCode());
-            hash = 31 * hash + (maxPrice == null ? 0 : maxPrice.hashCode());
-            hash = 31 * hash + (blockNumber == null ? 0 : blockNumber.hashCode());
-            hash = 31 * hash + (status == null ? 0 : status.hashCode());
-            return hash;
+            return Objects.hash(minSize, maxSize, minPrice, maxPrice, blockNumber, status);
+        }
+        
+        @Override
+        public String toString() {
+            return "SearchCriteria[" +
+                   "minSize=" + minSize +
+                   ", maxSize=" + maxSize +
+                   ", minPrice=" + minPrice +
+                   ", maxPrice=" + maxPrice +
+                   ", block=" + blockNumber +
+                   ", status='" + status + "']";
         }
     }
 }

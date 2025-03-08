@@ -1,8 +1,14 @@
+/**
+ * Concrete component class representing a basic lot
+ */
 public class Lot implements LotComponent {
-    private String id;
-    private int block;
-    private int lotNumber;
-    private double size;
+    // Use a different serialVersionUID name to avoid hiding warning
+    private static final long serialVersionUIDLot = 1L;
+    
+    private final String id;
+    private final int block;
+    private final int lotNumber;
+    private final double size;
     private double price;
     private String status;
 
@@ -12,7 +18,7 @@ public class Lot implements LotComponent {
         this.lotNumber = lotNumber;
         this.size = size;
         this.price = price;
-        this.status = "AVAILABLE"; // Changed to all caps for consistency
+        this.status = LotFactory.STATUS_AVAILABLE;
     }
 
     // Getters and setters
@@ -24,24 +30,12 @@ public class Lot implements LotComponent {
         return block;
     }
 
-    public void setBlock(int block) {
-        this.block = block;
-    }
-
     public int getLotNumber() {
         return lotNumber;
     }
 
-    public void setLotNumber(int lotNumber) {
-        this.lotNumber = lotNumber;
-    }
-
     public double getSize() {
         return size;
-    }
-
-    public void setSize(double size) {
-        this.size = size;
     }
 
     @Override
@@ -55,7 +49,7 @@ public class Lot implements LotComponent {
 
     @Override
     public String getStatus() {
-        return status; // Return the actual status field
+        return status;
     }
 
     public void setStatus(String status) {
@@ -64,13 +58,13 @@ public class Lot implements LotComponent {
 
     @Override
     public String getDescription() {
-        return "Lot " + block + "-" + lotNumber + 
-               " (" + size + " sqm) - $" + price + 
-               " - Status: " + status; // Use the status field
+        return String.format("Lot %d-%d (%.1f sqm) - $%.2f - Status: %s",
+            block, lotNumber, size, price, status);
     }
 
     @Override
     public String toString() {
-        return "ID: " + id + ", Block: " + block + ", Lot: " + lotNumber + ", Size: " + size + " sqm, Price: $" + price + ", Status: " + status;
+        return String.format("ID: %s, Block: %d, Lot: %d, Size: %.1f sqm, Price: $%.2f, Status: %s",
+            id, block, lotNumber, size, price, status);
     }
 }

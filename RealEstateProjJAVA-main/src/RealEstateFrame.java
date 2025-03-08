@@ -7,15 +7,15 @@ import javax.swing.table.TableRowSorter;
 
 public class RealEstateFrame extends JFrame implements ActionListener {
     private List<LotComponent> lots = new ArrayList<>();
-    private LotManager lotManager;
+    private final LotManager lotManager;
     private JTextArea displayArea;
     private JPanel controlPanel;
     private SearchPanel searchPanel;
     private JTable resultsTable;
     private LotTableModel tableModel;
     private TableRowSorter<LotTableModel> sorter;
-    private JProgressBar progressBar;
-    private JLabel statusLabel;
+    private final JProgressBar progressBar;
+    private final JLabel statusLabel;
     private boolean dataModified = false;
     
     public RealEstateFrame() {
@@ -79,19 +79,19 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         controlPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         
         JButton addLotButton = new JButton("Add New Lot");
-        addLotButton.addActionListener(e -> addNewLot());
+        addLotButton.addActionListener(_ -> addNewLot());
         
         JButton viewLotsButton = new JButton("View All Lots");
-        viewLotsButton.addActionListener(e -> displayLots());
+        viewLotsButton.addActionListener(_ -> displayLots());
         
         JButton addDecorationsButton = new JButton("Add Decorations to Lot");
-        addDecorationsButton.addActionListener(e -> addDecorations());
+        addDecorationsButton.addActionListener(_ -> addDecorations());
         
         JButton reserveLotButton = new JButton("Reserve Lot");
-        reserveLotButton.addActionListener(e -> changeLotStatus("reserve"));
+        reserveLotButton.addActionListener(_ -> changeLotStatus("reserve"));
         
         JButton sellLotButton = new JButton("Sell Lot");
-        sellLotButton.addActionListener(e -> changeLotStatus("sell"));
+        sellLotButton.addActionListener(_ -> changeLotStatus("sell"));
         
         controlPanel.add(addLotButton);
         controlPanel.add(viewLotsButton);
@@ -271,6 +271,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
                 searchPanel.resetFields();
                 tableModel.setLots(new ArrayList<>());
             }
+            default -> { }
         }
     }
     
