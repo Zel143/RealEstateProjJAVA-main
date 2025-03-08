@@ -1,3 +1,6 @@
+package com.realestate;
+
+import com.formdev.flatlaf.FlatLightLaf;
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -70,12 +73,17 @@ public class Main {
      */
     private static void setLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            LOGGER.info(() -> "Using system look and feel: " + UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | 
-                 IllegalAccessException | UnsupportedLookAndFeelException e) {
-            // Use multicatch instead of generic Exception
-            LOGGER.log(Level.WARNING, "Could not set system look and feel, using default", e);
+            // Use FlatLaf instead of system look and feel
+            FlatLightLaf.setup();
+            UIManager.setLookAndFeel(new FlatLightLaf());
+            LOGGER.info("Using FlatLaf light theme");
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not set FlatLaf, using system look and feel", e);
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ex) {
+                LOGGER.log(Level.WARNING, "Failed to set system look and feel", ex);
+            }
         }
     }
     
