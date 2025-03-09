@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableRowSorter;
 
 public class RealEstateFrame extends JFrame implements ActionListener {
@@ -19,7 +20,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
     private LotTableModel tableModel;
 
     public RealEstateFrame() {
-        super("Real Estate Management System");
+        super("Veridian Hills | Real Estate Management System");
         setLayout(new BorderLayout());
 
         // Add status bar
@@ -30,6 +31,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         statusPanel.add(statusLabel, BorderLayout.WEST);
         statusPanel.add(progressBar, BorderLayout.EAST);
         add(statusPanel, BorderLayout.SOUTH);
+        statusPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Initialize lot manager
         lotManager = new LotManager();
@@ -39,6 +41,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         tabbedPane.addTab("Property Management", createManagementPanel());
         tabbedPane.addTab("Search Properties", createSearchTab());
         add(tabbedPane, BorderLayout.CENTER);
+        tabbedPane.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Initialize lots list
         lots = new ArrayList<>(lotManager.getAllLots());
@@ -78,19 +81,19 @@ public class RealEstateFrame extends JFrame implements ActionListener {
 
         JPanel controlPanel = new JPanel(new GridLayout(0, 1, 5, 5));
 
-        JButton addLotButton = new JButton("Add New realestate.lot.Lot");
+        JButton addLotButton = new JButton("Add New Lot");
         addLotButton.addActionListener(k -> addNewLot());
 
         JButton viewLotsButton = new JButton("View All Lots");
         viewLotsButton.addActionListener(k -> displayLots());
 
-        JButton addDecorationsButton = new JButton("Add Decorations to realestate.lot.Lot");
+        JButton addDecorationsButton = new JButton("Add Decorations to Lot");
         addDecorationsButton.addActionListener(k -> addDecorations());
 
-        JButton reserveLotButton = new JButton("Reserve realestate.lot.Lot");
+        JButton reserveLotButton = new JButton("Reserve Lot");
         reserveLotButton.addActionListener(k -> changeLotStatus("reserve"));
 
-        JButton sellLotButton = new JButton("Sell realestate.lot.Lot");
+        JButton sellLotButton = new JButton("Sell Lot");
         sellLotButton.addActionListener(k -> changeLotStatus("sell"));
 
         controlPanel.add(addLotButton);
@@ -125,7 +128,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
     private void addNewLot() {
         try {
             String blockStr = JOptionPane.showInputDialog("Enter Block Number (1-5):");
-            String lotStr = JOptionPane.showInputDialog("Enter realestate.lot.Lot Number (1-20):");
+            String lotStr = JOptionPane.showInputDialog("Enter Lot Number (1-20):");
             String sizeStr = JOptionPane.showInputDialog("Enter Size (sqm):");
             String priceStr = JOptionPane.showInputDialog("Enter Base Price ($):");
 
@@ -244,7 +247,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         // Only update if status changed
         if (updatedLot != lot) {
             lots.set(index, updatedLot);
-            displayArea.setText("realestate.lot.Lot " + action + "d successfully!\n" + updatedLot.getDescription());
+            displayArea.setText("Lot " + action + "d successfully!\n" + updatedLot.getDescription());
 
             // Update in manager
             Lot baseLot = LotFactory.getBaseLot(lot);
@@ -257,7 +260,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
             }
             markDataModified();
         } else {
-            displayArea.setText("realestate.lot.Lot status already up to date.");
+            displayArea.setText("Lot status already up to date.");
         }
     }
 
@@ -266,7 +269,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         if (baseLot != null) {
             return baseLot.getId();
         }
-        return "Unknown realestate.lot.Lot";
+        return "Unknown Lot";
     }
 
     @Override
