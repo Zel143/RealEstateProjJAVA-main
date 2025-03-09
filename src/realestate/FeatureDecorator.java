@@ -1,3 +1,8 @@
+package realestate;
+
+import realestate.lot.LotComponent;
+import realestate.lot.LotDecorator;
+
 /**
  * A decorator that adds features to lots with associated price increases
  */

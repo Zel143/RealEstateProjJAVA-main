@@ -1,8 +1,15 @@
+package realestate.login;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.util.logging.Logger;
 import javax.swing.*;
 
+import realestate.RealEstateFrame; // Import realestate.RealEstateFrame from one level lower package
+
 public class LoginFrame extends JFrame implements ActionListener {
+    private static final Logger LOGGER = Logger.getLogger(LoginFrame.class.getName());
+
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton, registerButton, resetPasswordButton;
@@ -56,7 +63,7 @@ public class LoginFrame extends JFrame implements ActionListener {
             if (userManager.authenticateUser(username, password)) {
                 JOptionPane.showMessageDialog(this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 openRealEstateFrame();
-                this.dispose(); // Close login window after successful login
+                this.dispose(); // Close realestate.login window after successful realestate.login
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }

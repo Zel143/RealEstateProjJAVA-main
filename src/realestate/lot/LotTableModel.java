@@ -1,9 +1,11 @@
+package realestate.lot;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 public class LotTableModel extends AbstractTableModel {
-    private final String[] columnNames = {"ID", "Block", "Lot#", "Size (sqm)", "Price ($)", "Status", "Features"};
+    private final String[] columnNames = {"ID", "Block", "realestate.lot.Lot#", "Size (sqm)", "Price ($)", "Status", "Features"};
     private List<LotComponent> lots;
 
     public LotTableModel() {

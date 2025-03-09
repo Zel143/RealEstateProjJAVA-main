@@ -1,3 +1,9 @@
+package realestate;
+
+import realestate.lot.LotComponent;
+import realestate.lot.LotDecorator;
+import realestate.lot.LotFactory;
+
 import java.util.regex.Pattern;
 
 /**

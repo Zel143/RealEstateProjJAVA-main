@@ -1,5 +1,7 @@
+package realestate.lot;
+
 /**
- * Abstract base decorator class for all Lot decorators
+ * Abstract base decorator class for all realestate.lot.Lot decorators
  */
 public abstract class LotDecorator implements LotComponent {
     private static final long serialVersionUID = 1L;
@@ -53,7 +55,7 @@ public abstract class LotDecorator implements LotComponent {
     
     /**
      * Unwraps all decorators to find the base lot
-     * @return The base Lot or null if not found
+     * @return The base realestate.lot.Lot or null if not found
      */
     public Lot getBaseLot() {
         return LotFactory.getBaseLot(this);

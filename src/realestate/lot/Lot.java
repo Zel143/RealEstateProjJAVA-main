@@ -1,3 +1,5 @@
+package realestate.lot;
+
 /**
  * Concrete component class representing a basic lot
  */
@@ -13,7 +15,7 @@ public class Lot implements LotComponent {
     private String status;
 
     public Lot(int block, int lotNumber, double size, double price) {
-        this.id = "Lot" + block + " " + lotNumber;
+        this.id = "realestate.lot.Lot" + block + " " + lotNumber;
         this.block = block;
         this.lotNumber = lotNumber;
         this.size = size;
@@ -58,13 +60,13 @@ public class Lot implements LotComponent {
 
     @Override
     public String getDescription() {
-        return String.format("Lot %d-%d (%.1f sqm) - $%.2f - Status: %s",
+        return String.format("realestate.lot.Lot %d-%d (%.1f sqm) - $%.2f - Status: %s",
             block, lotNumber, size, price, status);
     }
 
     @Override
     public String toString() {
-        return String.format("ID: %s, Block: %d, Lot: %d, Size: %.1f sqm, Price: $%.2f, Status: %s",
+        return String.format("ID: %s, Block: %d, realestate.lot.Lot: %d, Size: %.1f sqm, Price: $%.2f, Status: %s",
             id, block, lotNumber, size, price, status);
     }
 }

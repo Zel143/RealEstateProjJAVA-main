@@ -1,3 +1,8 @@
+package realestate.lot;
+
+import realestate.FeatureDecorator;
+import realestate.StatusDecorator;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;

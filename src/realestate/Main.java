@@ -1,3 +1,5 @@
+package realestate;
+
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -9,9 +11,11 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import com.formdev.flatlaf.FlatLightLaf;
+import realestate.login.LoginFrame;
 
 /**
- * Main application entry point
+ * realestate.Main application entry point
  */
 public class Main {
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
@@ -70,12 +74,10 @@ public class Main {
      */
     private static void setLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            LOGGER.info(() -> "Using system look and feel: " + UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | 
-                 IllegalAccessException | UnsupportedLookAndFeelException e) {
-            // Use multicatch instead of generic Exception
-            LOGGER.log(Level.WARNING, "Could not set system look and feel, using default", e);
+            UIManager.setLookAndFeel(new FlatLightLaf()); // Use FlatLaf here
+            LOGGER.info(() -> "Using FlatLaf Look and Feel: " + UIManager.getLookAndFeel().getName());
+        } catch (UnsupportedLookAndFeelException e) {
+            LOGGER.log(Level.WARNING, "Could not set FlatLaf Look and Feel, using default", e);
         }
     }
     
