@@ -1,13 +1,9 @@
-package com.realestate.data;
-
-import com.realestate.core.LotComponent;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;  // Added missing import
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
