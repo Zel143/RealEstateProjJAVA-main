@@ -1,6 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
 
 public class LoginFrame extends JFrame implements ActionListener {
     private JTextField usernameField;
@@ -79,16 +79,14 @@ public class LoginFrame extends JFrame implements ActionListener {
     }
 
     private void openRealEstateFrame() {
-        RealEstateFrame realEstateFrame = new RealEstateFrame();
-        realEstateFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        realEstateFrame.setSize(1024, 768);
-        realEstateFrame.setVisible(true);
-    }
+        this.dispose();
 
-    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            LoginFrame loginFrame = new LoginFrame();
-            loginFrame.setVisible(true);
+            RealEstateFrame realEstateFrame = new RealEstateFrame();
+            realEstateFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            realEstateFrame.setSize(1024, 768);
+            realEstateFrame.setLocationRelativeTo(null);
+            realEstateFrame.setVisible(true);
         });
     }
 }
