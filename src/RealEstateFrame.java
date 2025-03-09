@@ -3,6 +3,8 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 
 public class RealEstateFrame extends JFrame implements ActionListener {
@@ -71,6 +73,11 @@ public class RealEstateFrame extends JFrame implements ActionListener {
     private JPanel createManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
+        // Welcome image
+        JLabel welcomeLabel = new JLabel(new ImageIcon("img/welcome_image.png"));
+        welcomeLabel.setHorizontalAlignment(JLabel.CENTER);
+        panel.add(welcomeLabel, BorderLayout.NORTH);
+        
         displayArea = new JTextArea(20, 50);
         displayArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(displayArea);
@@ -116,6 +123,16 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         
         sorter = new TableRowSorter<>(tableModel);
         resultsTable.setRowSorter(sorter);
+        
+        // Enable grid lines
+        resultsTable.setShowGrid(true);
+        resultsTable.setGridColor(Color.LIGHT_GRAY);
+        
+        // Center align table headers
+        JTableHeader header = resultsTable.getTableHeader();
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        header.setDefaultRenderer(headerRenderer);
         
         panel.add(new JScrollPane(resultsTable), BorderLayout.CENTER);
         
