@@ -9,7 +9,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  * Main application entry point
@@ -69,14 +68,16 @@ public class Main {
     /**
      * Set the application look and feel
      */
-        private static void setLookAndFeel() {
-            try {
-                UIManager.setLookAndFeel(new FlatLightLaf());
-                LOGGER.info("Using FlatLaf Light theme");
-            } catch (UnsupportedLookAndFeelException e) {
-                LOGGER.log(Level.WARNING, "Could not set FlatLaf look and feel, using default", e);
-            }
+    private static void setLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            LOGGER.info(() -> "Using system look and feel: " + UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | 
+                 IllegalAccessException | UnsupportedLookAndFeelException e) {
+            // Use multicatch instead of generic Exception
+            LOGGER.log(Level.WARNING, "Could not set system look and feel, using default", e);
         }
+    }
     
     /**
      * Launch the application UI
@@ -87,7 +88,7 @@ public class Main {
                 JFrame frame = new RealEstateFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setSize(1024, 768);
-                frame.setLocationRelativeTo(null);
+                frame.setLocationRelativeTo(null); // Center on screen
                 frame.setVisible(true);
                 
                 LOGGER.info("Application started successfully");
