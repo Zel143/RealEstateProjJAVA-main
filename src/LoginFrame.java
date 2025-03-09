@@ -1,6 +1,7 @@
+import com.formdev.flatlaf.FlatLightLaf;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 
 public class LoginFrame extends JFrame implements ActionListener {
     private JTextField usernameField;
@@ -79,14 +80,22 @@ public class LoginFrame extends JFrame implements ActionListener {
     }
 
     private void openRealEstateFrame() {
-        this.dispose();
+        RealEstateFrame realEstateFrame = new RealEstateFrame();
+        realEstateFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        realEstateFrame.setSize(1024, 768);
+        realEstateFrame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf()); // Apply FlatLaf theme
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
 
         SwingUtilities.invokeLater(() -> {
-            RealEstateFrame realEstateFrame = new RealEstateFrame();
-            realEstateFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            realEstateFrame.setSize(1024, 768);
-            realEstateFrame.setLocationRelativeTo(null);
-            realEstateFrame.setVisible(true);
+            LoginFrame loginFrame = new LoginFrame();
+            loginFrame.setVisible(true);
         });
     }
 }
