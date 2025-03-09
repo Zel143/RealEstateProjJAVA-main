@@ -3,3 +3,6 @@
 *.dat
 *.bak
 *.properties
+
+.vscode
+.idea

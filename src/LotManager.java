@@ -228,7 +228,7 @@ public class LotManager {
                                                         Double minPrice, Double maxPrice, 
                                                         Integer blockNumber, String status) {
         // Start with a predicate that matches everything
-        Predicate<LotComponent> predicate = _ -> true;
+        Predicate<LotComponent> predicate = k -> true;
         
         // Add each criteria as needed
         if (blockNumber != null) {

@@ -92,13 +92,13 @@ public final class ConfigManager {
     public String getProperty(String key) {
         return properties.getProperty(key, DEFAULTS.getOrDefault(key, null));
     }
-    
+
     /**
      * Get an integer property with caching
      */
     public int getIntProperty(String key) {
         // Check cache first
-        return (Integer) valueCache.computeIfAbsent(key + ".int", _ -> {
+        return (Integer) valueCache.computeIfAbsent(key + ".int", k -> {
             try {
                 return Integer.parseInt(getProperty(key));
             } catch (NumberFormatException e) {
@@ -106,13 +106,13 @@ public final class ConfigManager {
             }
         });
     }
-    
+
     /**
      * Get a double property with caching
      */
     public double getDoubleProperty(String key) {
         // Check cache first
-        return (Double) valueCache.computeIfAbsent(key + ".double", _ -> {
+        return (Double) valueCache.computeIfAbsent(key + ".double", k -> {
             try {
                 return Double.parseDouble(getProperty(key));
             } catch (NumberFormatException e) {
@@ -126,7 +126,7 @@ public final class ConfigManager {
      */
     public boolean getBooleanProperty(String key) {
         // Check cache first - removed unnecessary temporary
-        return (Boolean) valueCache.computeIfAbsent(key + ".boolean", _ -> 
+        return (Boolean) valueCache.computeIfAbsent(key + ".boolean", k ->
             Boolean.parseBoolean(getProperty(key)));
     }
     

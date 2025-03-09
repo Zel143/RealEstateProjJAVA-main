@@ -79,19 +79,19 @@ public class RealEstateFrame extends JFrame implements ActionListener {
         controlPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         
         JButton addLotButton = new JButton("Add New Lot");
-        addLotButton.addActionListener(_ -> addNewLot());
+        addLotButton.addActionListener(k -> addNewLot());
         
         JButton viewLotsButton = new JButton("View All Lots");
-        viewLotsButton.addActionListener(_ -> displayLots());
+        viewLotsButton.addActionListener(k -> displayLots());
         
         JButton addDecorationsButton = new JButton("Add Decorations to Lot");
-        addDecorationsButton.addActionListener(_ -> addDecorations());
+        addDecorationsButton.addActionListener(k -> addDecorations());
         
         JButton reserveLotButton = new JButton("Reserve Lot");
-        reserveLotButton.addActionListener(_ -> changeLotStatus("reserve"));
+        reserveLotButton.addActionListener(k -> changeLotStatus("reserve"));
         
         JButton sellLotButton = new JButton("Sell Lot");
-        sellLotButton.addActionListener(_ -> changeLotStatus("sell"));
+        sellLotButton.addActionListener(k -> changeLotStatus("sell"));
         
         controlPanel.add(addLotButton);
         controlPanel.add(viewLotsButton);

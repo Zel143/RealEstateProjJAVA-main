@@ -92,7 +92,7 @@ public final class PerformanceMonitor {
      * Record an operation's timing
      */
     private static void recordOperation(String operationName, long durationNanos, boolean failed) {
-        stats.computeIfAbsent(operationName, _ -> new OperationStats())
+        stats.computeIfAbsent(operationName, k -> new OperationStats())
              .record(durationNanos, failed);
         
         // Log slow operations
