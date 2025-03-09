@@ -85,11 +85,9 @@ public class Main {
     private static void launchApplication() {
         SwingUtilities.invokeLater(() -> {
             try {
-                JFrame frame = new RealEstateFrame();
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.setSize(1024, 768);
-                frame.setLocationRelativeTo(null); // Center on screen
-                frame.setVisible(true);
+                LoginFrame loginFrame = new LoginFrame();
+                loginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                loginFrame.setVisible(true);
                 
                 LOGGER.info("Application started successfully");
             } catch (Exception e) {
