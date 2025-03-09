@@ -1,3 +1,5 @@
+package realestate.lot;
+
 import java.io.Serializable;
 
 /**

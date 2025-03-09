@@ -1,3 +1,5 @@
+package realestate.lot;
+
 /**
  * Concrete component class representing a basic lot
  */
@@ -13,7 +15,7 @@ public class Lot implements LotComponent {
     private String status;
 
     public Lot(int block, int lotNumber, double size, double price) {
-        this.id = "Lot" + block + " " + lotNumber;
+        this.id = "B" + block + " L" + lotNumber;
         this.block = block;
         this.lotNumber = lotNumber;
         this.size = size;

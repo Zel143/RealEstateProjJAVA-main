@@ -1,3 +1,7 @@
+package realestate.lot;
+
+import realestate.PerformanceCache;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -8,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Thread-safe facade for LotManager that optimizes for concurrent access
+ * Thread-safe facade for realestate.lot.LotManager that optimizes for concurrent access
  */
 public class ConcurrentLotManager implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -23,7 +27,7 @@ public class ConcurrentLotManager implements Serializable {
      * @param lotManager the delegate lot manager
      */
     public ConcurrentLotManager(LotManager lotManager) {
-        this.lotManager = Objects.requireNonNull(lotManager, "LotManager cannot be null");
+        this.lotManager = Objects.requireNonNull(lotManager, "realestate.lot.LotManager cannot be null");
         this.lock = new ReentrantReadWriteLock();
         this.searchCache = new PerformanceCache<>(50, 30_000); // Cache 50 searches for 30 seconds
     }

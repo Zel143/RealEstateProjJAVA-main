@@ -1,3 +1,8 @@
+package realestate;
+
+import realestate.lot.LotComponent;
+import realestate.lot.LotDecorator;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;

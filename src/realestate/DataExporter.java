@@ -1,3 +1,10 @@
+package realestate;
+
+import realestate.lot.Lot;
+import realestate.lot.LotComponent;
+import realestate.lot.LotFactory;
+import realestate.lot.LotManager;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -260,7 +267,7 @@ public final class DataExporter {
     /**
      * Import lots from CSV file asynchronously
      * @param file Source CSV file
-     * @param lotManager LotManager to add lots to
+     * @param lotManager realestate.lot.LotManager to add lots to
      * @param progressCallback Callback for import progress (0-100)
      * @param resultCallback Callback with import results
      */
@@ -314,12 +321,12 @@ public final class DataExporter {
                         String lotDetails = parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[4];
                         String result = lotManager.addLot(lotDetails);
                         
-                        if (result.startsWith("Lot added successfully")) {
+                        if (result.startsWith("realestate.lot.Lot added successfully")) {
                             importedCount.incrementAndGet();
                             
                             // Extract lot ID from result or construct it
                             String lotId = parts.length > 0 && !parts[0].isEmpty() ? parts[0] : 
-                                          "Lot" + parts[1] + " " + parts[2];
+                                          "realestate.lot.Lot" + parts[1] + " " + parts[2];
                             
                             // Apply status if provided
                             if (parts.length > 5 && !parts[5].isEmpty()) {
