@@ -111,16 +111,16 @@ public class LotManager {
                 return "Invalid input values";
             }
 
-            String checkId = "realestate.lot.Lot" + block + " " + lotNumber;
+            String checkId = "B" + block + " L" + lotNumber;
             if (lots.containsKey(checkId)) {
-                return "realestate.lot.Lot already exists with this block and lot number";
+                return "Lot already exists with this block and lot number";
             }
 
             Lot newLot = new Lot(block, lotNumber, size, price);
             lots.put(newLot.getId(), newLot);
             clearSearchCache();
             
-            return "realestate.lot.Lot added successfully:\n" + newLot.getDescription();
+            return "Lot added successfully:\n" + newLot.getDescription();
         } catch (NumberFormatException e) {
             return "Invalid input: Please enter numeric values";
         }
@@ -132,7 +132,7 @@ public class LotManager {
     public String changeLotStatus(String lotId, String status) {
         LotComponent lotComponent = lots.get(lotId);
         if (lotComponent == null) {
-            return "realestate.lot.Lot not found";
+            return "Lot not found";
         }
         
         // Normalize the status string
@@ -153,7 +153,7 @@ public class LotManager {
             clearSearchCache();
         }
         
-        return "realestate.lot.Lot has been " + (statusKey.endsWith("d") ? statusKey : statusKey + "d");
+        return "Lot has been " + (statusKey.endsWith("d") ? statusKey : statusKey + "d");
     }
     
     // Simplified status methods that delegate to changeLotStatus

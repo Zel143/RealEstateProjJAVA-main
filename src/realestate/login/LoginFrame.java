@@ -147,7 +147,7 @@ public class LoginFrame extends JFrame implements ActionListener {
                     realEstateFrame.setVisible(true);
                 });
             }
-        }, 5000);
+        }, 2000);
     }
 
 }
