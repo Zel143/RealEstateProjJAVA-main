@@ -5,12 +5,12 @@ package realestate.lot;
  */
 public abstract class LotDecorator implements LotComponent {
     private static final long serialVersionUID = 1L;
-    
+
     protected final LotComponent decoratedLot;
-    
+
     /**
      * Creates a new decorator around a component
-     * 
+     *
      * @param decoratedLot The component to decorate
      * @throws IllegalArgumentException if the component is null
      */
@@ -36,7 +36,7 @@ public abstract class LotDecorator implements LotComponent {
     public double getPrice() {
         return decoratedLot.getPrice();
     }
-    
+
     /**
      * Default implementation delegates to decorated component
      */
@@ -47,14 +47,16 @@ public abstract class LotDecorator implements LotComponent {
 
     /**
      * Get the decorated component
+     *
      * @return The component that this decorator wraps
      */
     public LotComponent getDecoratedLot() {
         return decoratedLot;
     }
-    
+
     /**
      * Unwraps all decorators to find the base lot
+     *
      * @return The base realestate.lot.Lot or null if not found
      */
     public Lot getBaseLot() {

@@ -154,7 +154,7 @@ public class RealEstateFrame extends JFrame implements ActionListener {
             return;
         }
 
-        StringBuilder sb = new StringBuilder("Available Lots:\n\n");
+        StringBuilder sb = new StringBuilder("All Lots:\n\n");
 
         for (int i = 0; i < lots.size(); i++) {
             sb.append(i + 1).append(". ").append(lots.get(i).getDescription()).append("\n");
